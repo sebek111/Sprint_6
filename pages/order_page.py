@@ -1,20 +1,13 @@
 import allure
 import random
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 
 from pages.base_page import BasePage
-from data import *
 from data import rent_time_info
 import locators.order_page_locators as locators
 
 
 class OrderPage(BasePage):
-
-    def __init__(self, driver):
-        super().__init__(driver)
 
     @staticmethod
     def format_rent_time_locator(rent_time_option_locator, option):
@@ -22,26 +15,38 @@ class OrderPage(BasePage):
         format_locator = locator_for_format.format(text=option, color=option)
         return by, format_locator
 
-    @allure.step('Открываем страницу заказа нажатием на любую кнопку  "Заказать"')
-    def open_order_form(self, order_button):
+    @allure.step('Открываем форму заказа (кнопка сверху)')
+    def open_order_form_from_header(self):
         self.accept_cookies()
-        self.scroll_to_element(order_button)
-        self.click_on_element(order_button)
+        self.scroll_to_element(locators.ORDER_BUTTON_HEADER)
+        self.click_on_element(locators.ORDER_BUTTON_HEADER)
+
+    @allure.step('Открываем форму заказа (кнопка в центре страницы)')
+    def open_order_form_from_middle(self):
+        self.accept_cookies()
+        self.scroll_to_element(locators.ORDER_BUTTON_MIDDLE)
+        self.click_on_element(locators.ORDER_BUTTON_MIDDLE)
+
+    @allure.step('Открываем форму заказа (кнопка внизу страницы)')
+    def open_order_form_from_bottom(self):
+        self.accept_cookies()
+        self.scroll_to_element(locators.ORDER_BUTTON_BOTTOM)
+        self.click_on_element(locators.ORDER_BUTTON_BOTTOM)
 
     @allure.step('Закрываем cookie-баннер, если он есть')
     def accept_cookies(self):
         try:
-            self.click_on_element((By.CLASS_NAME, "App_CookieButton__3cvqF"))
+            self.click_on_element(locators.COOKIE_BUTTON)
         except:
             pass
 
-    @allure.step('Заполняем форму данными на Ивана')
+    @allure.step('Заполняем форму данными')
     def fill_order_field(self, data):
         self.fill_text_to_field(locators.NAME_INPUT, data['name'])
         self.fill_text_to_field(locators.SURNAME_INPUT, data['surname'])
         self.fill_text_to_field(locators.ADDRESS_INPUT, data['address'])
         self.click_on_element(locators.METRO_STATION)
-        self.wait.until(EC.visibility_of_element_located(locators.SELECT_METRO_STATION))
+        self.find_element_with_wait(locators.SELECT_METRO_STATION)
         self.click_on_element(locators.SELECT_METRO_STATION)
         self.fill_text_to_field(locators.PHONE_NUMBER_UNPUT, data['phone'])
 
@@ -49,7 +54,7 @@ class OrderPage(BasePage):
     def click_next_button(self):
         self.click_on_element(locators.NEXT_BUTTON)
 
-    @allure.step('Заполняем информацию о сроке аренды и выборе цвета')
+    @allure.step('Заполняем срок аренды и цвет самоката')
     def fill_rent_info(self, data):
         date_input = self.find_element_with_wait(locators.DELIVERY_DATE_INPUT)
         date_input.send_keys(data['rent_date'])
@@ -63,6 +68,7 @@ class OrderPage(BasePage):
         chosen_color = random.choice(['black', 'grey'])
         color_locator = self.format_rent_time_locator(locators.SELECT_COLOR, chosen_color)
         self.click_on_element(color_locator)
+
         self.fill_text_to_field(locators.COMMNET_INPUT, data['rent_comment'])
 
     @allure.step("Подтверждаем создание заказа")
@@ -78,10 +84,12 @@ class OrderPage(BasePage):
     def confirm_create_order(self):
         self.click_on_element(locators.CONFIRM_BUTTON)
 
-    @allure.step('Проверяем отображение окна о успешном заказе')
+    @allure.step('Проверяем отображение окна об успешном заказе')
     def check_change_modal_window(self):
         self.find_element_with_wait(locators.SUCCES_CREATE_ORDER)
 
     @allure.step('Получаем текст сообщения об успешном заказе')
     def get_successful_create_order_title(self):
         return self.get_text_from_element(locators.SUCCES_CREATE_ORDER)
+
+
